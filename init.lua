@@ -32,9 +32,6 @@ end)
 --  See `:help hlsearch`
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 
--- Diagnostic keymaps
-vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Open diagnostic [Q]uickfix list" })
-
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
 -- is not what someone will guess without a bit more experience.
@@ -70,6 +67,8 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 })
 
 vim.keymap.set("i", "jj", "<Esc>", { desc = "Exit insert mode with jj" })
+vim.keymap.set("n", "<leader>w", ":bd<CR>", { desc = "Close current buffer" })
+vim.keymap.set("n", "<leader>tl", ":set list!<CR>", { desc = "[T]oggle [l]istchars" })
 vim.keymap.set("n", "<C-s>", ":w<CR>", { desc = "Save file" })
 vim.keymap.set("i", "<C-s>", "<Esc>:w<CR>a", { desc = "Save file inside insert mode" })
 -- vim.keymap.set('n', 'j', 'gj', { silent = true })
@@ -78,11 +77,9 @@ vim.keymap.set("i", "<C-s>", "<Esc>:w<CR>a", { desc = "Save file inside insert m
 -- vim.keymap.set('n', '<C-u>', '<C-u>zz')
 -- vim.keymap.set('n', 'n', 'nzzzv')
 -- vim.keymap.set('n', 'N', 'Nzzzv')
-vim.keymap.set({ "n", "v" }, "d", "_d", { desc = "Delete without copying" })
-vim.keymap.set("n", "dd", "_dd", { desc = "Delete line without copying" })
-vim.keymap.set({ "n", "v" }, "<leader>d", "d", { desc = "Cut (standard d behavior)" })
-vim.keymap.set("x", "p", "P", { desc = "Paste without overwriting clipboard" })
-vim.keymap.set("n", "<leader>w", ":bd<CR>", { desc = "Close current buffer" })
-vim.keymap.set("n", "<leader>tl", ":set list!<CR>", { desc = "[T]oggle [l]istchars" })
+-- vim.keymap.set({ "n", "v" }, "d", "_d", { desc = "Delete without copying" })
+-- vim.keymap.set("n", "dd", "_dd", { desc = "Delete line without copying" })
+-- vim.keymap.set({ "n", "v" }, "<leader>d", "d", { desc = "Cut (standard d behavior)" })
+-- vim.keymap.set("x", "p", "P", { desc = "Paste without overwriting clipboard" })
 
 require("config.lazy")

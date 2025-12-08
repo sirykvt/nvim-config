@@ -1,7 +1,12 @@
 return {
 	{
 		"mason-org/mason.nvim",
-		opts = {},
+		opts = {
+			registries = {
+				"github:mason-org/mason-registry",
+				"github:Crashdummyy/mason-registry",
+			},
+		},
 	},
 	{
 		"mason-org/mason-lspconfig.nvim",
@@ -12,7 +17,7 @@ return {
 		opts = {
 			ensure_installed = {
 				"clangd",
-				"csharp_ls",
+				"roslyn"
 			},
 		},
 	},
@@ -44,24 +49,28 @@ return {
 						})
 					end
 
+					-- MISC
 					map("n", "K", vim.lsp.buf.hover, "LSP: hover")
-					map("n", "gd", vim.lsp.buf.definition, "LSP: [G]o to [d]efinition")
-					map("n", "gr", vim.lsp.buf.references, "LSP: [G]o to [r]eferences")
-					map("n", "<leader>rn", vim.lsp.buf.rename, "LSP: [R]efactor [n]ame")
-					map("n", "<leader>ca", vim.lsp.buf.code_action, "LSP: [C]ode [a]ction")
-					map("n", "<leader>cf", function()
+					map("n", "<leader>R", ":LspRestart<CR>", "LSP: [R]estart")
+					map("n", "<leader>A", vim.lsp.buf.code_action, "LSP: Code [A]ction")
+					map("n", "<leader>F", function()
 						vim.lsp.buf.format({ async = true })
-					end, "LSP: [C]ode [f]ormat")
-					map("n", "<leader>D", vim.diagnostic.open_float, "LSP: Show [D]iagnostic")
-					map("n", "<leader>lR", ":LspRestart<CR>", "LSP: [R]estart")
+					end, "LSP: Code [F]ormat")
+					
+					-- GO TO
+					-- map("n", "gd", vim.lsp.buf.definition, "LSP: [G]o to [d]efinition")
+					-- map("n", "gr", vim.lsp.buf.references, "LSP: [G]o to [r]eferences")
+
+					-- REFACTORING
+					map("n", "<leader>rn", vim.lsp.buf.rename, "LSP: [R]efactor [N]ame")
 
 					local ok_telescope, tbuiltin = pcall(require, "telescope.builtin")
 					if ok_telescope then
-						map("n", "<leader>ld", tbuiltin.lsp_definitions, "LSP: [L]ist [d]efinitions")
-						map("n", "<leader>lr", tbuiltin.lsp_references, "LSP: [L]ist [r]eferences")
-						map("n", "<leader>li", tbuiltin.lsp_implementations, "LSP: [L]ist [i]mplementations")
-						map("n", "<leader>ls", tbuiltin.lsp_document_symbols, "LSP: [L]ist buffer [s]ymbols")
-						map("n", "<leader>lS", tbuiltin.lsp_workspace_symbols, "TLSP: [L]ist workspace [S]ymbols")
+						map("n", "<leader>sd", tbuiltin.lsp_definitions, "LSP: [S]earch [D]efinitions")
+						map("n", "<leader>sr", tbuiltin.lsp_references, "LSP: [S]earch [R]eferences")
+						map("n", "<leader>si", tbuiltin.lsp_implementations, "LSP: [S]earch [I]mplementations")
+						map("n", "<leader>sS", tbuiltin.lsp_document_symbols, "LSP: [S]earch buffer [S]ymbols")
+						map("n", "<leader>ss", tbuiltin.lsp_dynamic_workspace_symbols, "LSP: [S]earch workspace [S]ymbols")
 					end
 				end,
 			})
@@ -93,7 +102,7 @@ return {
 				capabilities = capabilities,
 			})
 
-			vim.lsp.config("csharp_ls", {
+			vim.lsp.config("roslyn", {
 				capabilities = capabilities,
 			})
 		end,

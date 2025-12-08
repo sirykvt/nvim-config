@@ -5,7 +5,7 @@ return {
 		cmd = "Neotree",
 		keys = {
 			{
-				"<leader>e",
+				"<leader><TAB>",
 				function()
 					require("neo-tree.command").execute({ toggle = true, dir = vim.loop.cwd() })
 				end,
