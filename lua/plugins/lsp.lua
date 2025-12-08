@@ -62,7 +62,7 @@ return {
 					-- map("n", "gr", vim.lsp.buf.references, "LSP: [G]o to [r]eferences")
 
 					-- REFACTORING
-					map("n", "<leader>rr", vim.lsp.buf.rename, "LSP: [R]efactor [R]ename")
+					map("n", "<leader>rr", vim.lsp.buf.rename, "LSP: [R]ename")
 
 					local ok_telescope, tbuiltin = pcall(require, "telescope.builtin")
 					if ok_telescope then
