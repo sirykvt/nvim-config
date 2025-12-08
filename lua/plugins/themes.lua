@@ -1,47 +1,43 @@
 return {
-    -- {
-    --     "navarasu/onedark.nvim",
-    --     priority = 1000, -- make sure to load this before all the other start plugins
-    --     config = function()
-    --         require('onedark').setup {
-    --             style = 'warmer'
-    --         }
-    --         require('onedark').load()
-    --     end
-    -- }
+    {
+        "navarasu/onedark.nvim",
+        priority = 1000, -- make sure to load this before all the other start plugins
+        config = function()
+            require('onedark').setup {
+                style = 'warmer'
+            }
+        end
+    },
 
-    -- {
-    --     "ellisonleao/gruvbox.nvim",
-    --     priority = 1000, -- Загрузить эту тему первой, до остальных плагинов
-    --     config = function()
-    --         require("gruvbox").setup({
-    --             terminal_colors = true,
-    --             undercurl = true,
-    --             underline = true,
-    --             bold = true,
-    --             italic = {
-    --             strings = true,
-    --             comments = true,
-    --             operators = false,
-    --             folds = true,
-    --             },
-    --             strikethrough = true,
-    --             invert_selection = false,
-    --             invert_signs = false,
-    --             invert_tabline = false,
-    --             invert_intend_guides = false,
-    --             inverse = true, -- Инвертировать цвета для поиска, выделения и т.д.
-    --             contrast = "hard", -- Варианты: "soft", "medium", "hard" (самый темный фон)
-    --             palette_overrides = {},
-    --             overrides = {},
-    --             dim_inactive = false,
-    --             transparent_mode = false, -- Поставьте true, если хотите прозрачный фон
-    --         })
-
-    --         -- Команда, которая собственно включает тему
-    --         vim.cmd("colorscheme gruvbox")
-    --     end,
-    -- }
+    {
+        "ellisonleao/gruvbox.nvim",
+        priority = 1000, -- Загрузить эту тему первой, до остальных плагинов
+        config = function()
+            require("gruvbox").setup({
+                terminal_colors = true,
+                undercurl = true,
+                underline = true,
+                bold = true,
+                italic = {
+                strings = true,
+                comments = true,
+                operators = false,
+                folds = true,
+                },
+                strikethrough = true,
+                invert_selection = false,
+                invert_signs = false,
+                invert_tabline = false,
+                invert_intend_guides = false,
+                inverse = true, -- Инвертировать цвета для поиска, выделения и т.д.
+                contrast = "hard", -- Варианты: "soft", "medium", "hard" (самый темный фон)
+                palette_overrides = {},
+                overrides = {},
+                dim_inactive = false,
+                transparent_mode = false, -- Поставьте true, если хотите прозрачный фон
+            })
+        end,
+    },
 
     {
         "loctvl842/monokai-pro.nvim",
@@ -71,9 +67,6 @@ return {
                 lualine = { enabled = true },
             },
         })
-
-        -- Активация темы
-        vim.cmd("colorscheme monokai-pro")
         end,
     }
 }
