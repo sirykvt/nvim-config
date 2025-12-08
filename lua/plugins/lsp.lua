@@ -17,7 +17,7 @@ return {
 		opts = {
 			ensure_installed = {
 				"clangd",
-				"roslyn"
+				"roslyn",
 			},
 		},
 	},
@@ -52,17 +52,17 @@ return {
 					-- MISC
 					map("n", "K", vim.lsp.buf.hover, "LSP: hover")
 					map("n", "<leader>R", ":LspRestart<CR>", "LSP: [R]estart")
-					map("n", "<leader>A", vim.lsp.buf.code_action, "LSP: Code [A]ction")
-					map("n", "<leader>F", function()
+					map("n", "<leader>ra", vim.lsp.buf.code_action, "LSP: Code [A]ction")
+					map("n", "<leader>rf", function()
 						vim.lsp.buf.format({ async = true })
 					end, "LSP: Code [F]ormat")
-					
+
 					-- GO TO
 					-- map("n", "gd", vim.lsp.buf.definition, "LSP: [G]o to [d]efinition")
 					-- map("n", "gr", vim.lsp.buf.references, "LSP: [G]o to [r]eferences")
 
 					-- REFACTORING
-					map("n", "<leader>rn", vim.lsp.buf.rename, "LSP: [R]efactor [N]ame")
+					map("n", "<leader>rr", vim.lsp.buf.rename, "LSP: [R]efactor [R]ename")
 
 					local ok_telescope, tbuiltin = pcall(require, "telescope.builtin")
 					if ok_telescope then
@@ -70,7 +70,12 @@ return {
 						map("n", "<leader>sr", tbuiltin.lsp_references, "LSP: [S]earch [R]eferences")
 						map("n", "<leader>si", tbuiltin.lsp_implementations, "LSP: [S]earch [I]mplementations")
 						map("n", "<leader>sS", tbuiltin.lsp_document_symbols, "LSP: [S]earch buffer [S]ymbols")
-						map("n", "<leader>ss", tbuiltin.lsp_dynamic_workspace_symbols, "LSP: [S]earch workspace [S]ymbols")
+						map(
+							"n",
+							"<leader>ss",
+							tbuiltin.lsp_dynamic_workspace_symbols,
+							"LSP: [S]earch workspace [S]ymbols"
+						)
 					end
 				end,
 			})
