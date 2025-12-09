@@ -4,8 +4,10 @@ return {
 		dependencies = { "nvim-tree/nvim-web-devicons" },
 		opts = {
 			options = {
-				icons_enabled = true,
-				theme = "auto",
+				section_separators = '',
+				component_separators = '',
+				icons_enabled = false,
+				theme = "codedark",
 				disabled_filetypes = {
 					statusline = {},
 					winbar = {},
@@ -41,4 +43,3 @@ return {
 		},
 	},
 }
-
