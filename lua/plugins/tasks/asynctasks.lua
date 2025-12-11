@@ -8,8 +8,19 @@ local function configure_runners()
                 existing_term:shutdown()
             end
 
+            local shell = vim.o.shell
+            local cmd = opts.cmd .. "; exec " .. shell
+
+            if vim.fn.has("win32") == 1 then
+                if shell:lower():match("cmd") then
+                    cmd = opts.cmd .. " & " .. shell
+                elseif shell:lower():match("powershell") or shell:lower():match("pwsh") then
+                    cmd = opts.cmd .. "; " .. shell
+                end
+            end
+
             local task_term = Terminal:new({
-                cmd = opts.cmd .. "; exec " .. vim.o.shell,
+                cmd = cmd,
                 dir = opts.cwd,
                 id = id,
                 display_name = name,
