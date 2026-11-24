@@ -20,15 +20,16 @@ require("lazy").setup({
 	spec = {
 		-- import your plugins
 		{ import = "plugins" },
-		{ import = "plugins/lsp" },
-		{ import = "plugins/code" },
-		{ import = "plugins/tasks" },
-		{ import = "plugins/ue" },
+		{ import = "plugins.lsp" },
+		{ import = "plugins.code" },
+		{ import = "plugins.tasks" },
 	},
 	-- Configure any other settings here. See the documentation for more details.
 	-- colorscheme that will be used when installing plugins.
-	install = { colorscheme = { "monokai-pro" } },
+	install = { colorscheme = { "ayu-dark" } },
 	-- automatically check for plugin updates
-	checker = { enabled = true },
+	checker = { enabled = true, notify = false },
+	-- No plugin needs luarocks; avoids the hererocks bootstrap and its checkhealth error.
+	rocks = { enabled = false },
 })
 

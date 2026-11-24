@@ -7,7 +7,7 @@ return {
 				section_separators = '',
 				component_separators = '',
 				icons_enabled = false,
-				theme = "codedark",
+				theme = "ayu-dark",
 				disabled_filetypes = {
 					statusline = {},
 					winbar = {},
@@ -39,7 +39,7 @@ return {
 			},
 			tabline = {},
 			winbar = {},
-			extensions = { "neo-tree", "lazy" },
+			extensions = { "toggleterm", "lazy" },
 		},
 	},
 }

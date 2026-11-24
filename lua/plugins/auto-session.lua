@@ -1,13 +1,13 @@
 return {
 	"rmagatti/auto-session",
+	lazy = false,
 	keys = {
-		{ "<leader>Sl", "<cmd>AutoSession search<CR>", desc = "Sessions List" },
-		{ "<leader>Ss", "<cmd>AutoSession save<CR>",   desc = "Sessions Save" },
-		{ "<leader>St", "<cmd>AutoSession toggle<CR>", desc = "Sessions Toggle" },
+		{ "<leader>Sl", "<cmd>AutoSession search<CR>", desc = "Search sessions" },
+		{ "<leader>Ss", "<cmd>AutoSession save<CR>",   desc = "Save session" },
+		{ "<leader>St", "<cmd>AutoSession toggle<CR>", desc = "Toggle session autosave" },
 	},
 	opts = {
 		session_lens = {
-			picker = nil,
 			mappings = {
 				delete_session = { "i", "<C-d>" },
 				alternate_session = { "i", "<C-s>" },

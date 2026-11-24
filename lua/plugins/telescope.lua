@@ -15,7 +15,7 @@ local function open_handler(prompt_bufnr)
 
 	for _, entry in ipairs(selections) do
 		if entry.path ~= nil then
-			vim.cmd("edit " .. entry.path)
+			vim.cmd.edit(vim.fn.fnameescape(entry.path))
 		end
 	end
 end
@@ -36,21 +36,59 @@ return {
 				end,
 			},
 		},
-		opts = {
-			defaults = {
-				mappings = {
-					i = {
-						["<CR>"] = open_handler,
+		opts = function()
+			local themes = require("telescope.themes")
+
+			-- Location lists (references, diagnostics, symbols) have long lines: give results the full width.
+			local full_width = { layout_strategy = "vertical" }
+			-- Plain lists without anything useful to preview.
+			local list = { previewer = false, layout_config = { width = 0.6, height = 0.6 } }
+
+			return {
+				defaults = {
+					prompt_prefix = "❯ ",
+					selection_caret = "▍ ",
+					entry_prefix = "  ",
+					sorting_strategy = "ascending",
+					layout_strategy = "flex",
+					layout_config = {
+						prompt_position = "top",
+						width = 0.9,
+						height = 0.85,
+						flex = { flip_columns = 140 },
+						horizontal = { preview_width = 0.55 },
+						vertical = { mirror = true, preview_height = 0.45, preview_cutoff = 20 },
 					},
-					n = {
-						["<CR>"] = open_handler,
-					}
+					path_display = { "filename_first" },
+					dynamic_preview_title = true,
+					results_title = false,
+					borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
+					mappings = {
+						i = {
+							["<CR>"] = open_handler,
+						},
+						n = {
+							["<CR>"] = open_handler,
+						},
+					},
 				},
-			},
-			extensions = {
-				["ui-select"] = {},
-			},
-		},
+				pickers = {
+					buffers = { sort_mru = true, ignore_current_buffer = true },
+					current_buffer_fuzzy_find = { skip_empty_lines = true },
+					keymaps = list,
+					builtin = vim.tbl_extend("force", list, { include_extensions = true }),
+					diagnostics = vim.tbl_extend("force", full_width, { line_width = "full" }),
+					lsp_references = full_width,
+					lsp_definitions = full_width,
+					lsp_implementations = full_width,
+					lsp_incoming_calls = full_width,
+					lsp_outgoing_calls = full_width,
+				},
+				extensions = {
+					["ui-select"] = themes.get_dropdown(),
+				},
+			}
+		end,
 		config = function(_, opts)
 			require("telescope").setup(opts)
 
@@ -58,25 +96,23 @@ return {
 			pcall(require("telescope").load_extension, "ui-select")
 
 			local builtin = require("telescope.builtin")
-			vim.keymap.set("n", "<leader>sh", builtin.help_tags, { desc = "Search Help" })
-			vim.keymap.set("n", "<leader>sk", builtin.keymaps, { desc = "Search Keymaps" })
-			vim.keymap.set("n", "<leader>sf", builtin.find_files, { desc = "Search Files" })
-			vim.keymap.set("n", "<leader>sg", builtin.live_grep, { desc = "Search by Grep" })
-			vim.keymap.set("n", "<leader>s.", builtin.oldfiles, { desc = 'Search Recent Files' })
-			vim.keymap.set("n", "<leader>sb", builtin.builtin, { desc = 'Search Telescope Builtins' })
-			vim.keymap.set("n", "<leader>sa", builtin.resume, { desc = "Telescope Resume" })
-			vim.keymap.set("n", "<leader><leader>", builtin.buffers, { desc = "Search existing Buffers" })
+			vim.keymap.set("n", "<leader>sh", builtin.help_tags, { desc = "Help tags" })
+			vim.keymap.set("n", "<leader>sk", builtin.keymaps, { desc = "Keymaps" })
+			vim.keymap.set("n", "<leader>sf", builtin.find_files, { desc = "Files" })
+			vim.keymap.set("n", "<leader>sg", builtin.live_grep, { desc = "Grep" })
+			vim.keymap.set("n", "<leader>s.", builtin.oldfiles, { desc = "Recent files" })
+			vim.keymap.set("n", "<leader>sb", builtin.builtin, { desc = "Telescope pickers" })
+			vim.keymap.set("n", "<leader>sa", function()
+				builtin.find_files({ hidden = true, no_ignore = true })
+			end, { desc = "All files (incl. hidden and ignored)" })
+			vim.keymap.set("n", "<leader>sR", builtin.resume, { desc = "Resume last search" })
+			vim.keymap.set("n", "<leader><leader>", builtin.buffers, { desc = "Buffers" })
 
-			vim.keymap.set("n", "<leader>/", function()
-				builtin.current_buffer_fuzzy_find(require("telescope.themes").get_dropdown({
-					winblend = 10,
-					previewer = false,
-				}))
-			end, { desc = "Fuzzily search in current Buffer" })
+			vim.keymap.set("n", "<leader>/", builtin.current_buffer_fuzzy_find, { desc = "Search in buffer" })
 
 			vim.keymap.set("n", "<leader>sn", function()
 				builtin.find_files({ cwd = vim.fn.stdpath("config") })
-			end, { desc = "Search Neovim" })
+			end, { desc = "Neovim config files" })
 		end,
 	},
 }

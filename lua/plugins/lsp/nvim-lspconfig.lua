@@ -8,84 +8,65 @@ local function on_lsp_attach(args)
 		})
 	end
 
-	vim.diagnostic.config({
-		-- Show signs (left gutter icons)
-		virtual_text = true, -- <--- THIS IS THE KEY SETTING
-		
-		-- Optional: customize the appearance of the virtual text
-		-- 'details' (shows code and message) or 'error' (shows error/warning message only)
-		-- We recommend 'error' to keep it clean.
-		-- If you are using a plugin like 'nvim-lint', you might need to adjust this.
-		virtual_text = {
-		    severity = { min = vim.diagnostic.severity.HINT }, -- Show all severities
-		    source = "always",                                 -- Include the source (e.g., clangd)
-		    format = function(diagnostic)
-		        -- Only display the diagnostic message
-		        return diagnostic.message
-		    end,
-		},
-
-		-- Show line numbers where diagnostics start
-		signs = true,
-		
-		-- Underline diagnostics
-		underline = true,
-		
-		-- Update diagnostics only when the user is idle
-		update_in_insert = false,
-		
-		-- Set the delay for when diagnostics are refreshed
-		-- float = { ... } -- Configuration for the hover popup
-	})
-
 	-- Misc.
-	map("n", "K", vim.lsp.buf.hover, "Hover")
-	map("n", "<leader>xr", ":LspRestart<CR>", "LSP Restart")
-	map("n", "<leader>xl", ":LspInfo<CR>", "LSP Info")
+	map("n", "<leader>xr", "<cmd>LspRestart<CR>", "Restart LSP")
+	map("n", "<leader>xl", "<cmd>LspInfo<CR>", "LSP info")
 
 	-- Diagnostics.
-	map("n", "<leader>ds", vim.lsp.buf.hover, "Show diagnostics float")
-	map("n", "<leader>dl", function()
-		require('telescope.builtin').diagnostics({
-				bufnr = 0,
-			})
-		end, "Search Buffer diagnostics")
-	map("n", "<leader>dL", require('telescope.builtin').diagnostics, "Search Workspace diagnostics")
+	map("n", "<leader>ee", vim.diagnostic.open_float, "Line diagnostics")
+	map("n", "<leader>xh", function()
+		vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = args.buf }), { bufnr = args.buf })
+	end, "Toggle inlay hints")
 
 	-- Go to.
-	map("n", "gd", vim.lsp.buf.definition, "Go to Definition")
+	map("n", "gd", vim.lsp.buf.definition, "Go to definition")
+	map("n", "<CR>", vim.lsp.buf.definition, "Go to definition")
+	map("n", "gy", vim.lsp.buf.type_definition, "Go to type definition")
+	map("n", "gK", vim.lsp.buf.signature_help, "Signature help")
 	-- map("n", "gr", vim.lsp.buf.references, "Go to References")
+
+	local client = vim.lsp.get_client_by_id(args.data.client_id)
+	if client and client.name == "clangd" then
+		map("n", "<leader>q", "<cmd>LspClangdSwitchSourceHeader<CR>", "Switch source/header")
+	end
 
 	-- Refactoring.
 	map("n", "<leader>rr", vim.lsp.buf.rename, "Rename")
-	map("n", "<leader>ra", vim.lsp.buf.code_action, "Code Action")
-	map("n", "<leader>rf",
+	map("n", "<leader>ra", vim.lsp.buf.code_action, "Code action")
+	map({ "n", "x" }, "<leader>rf",
 		function()
 			vim.lsp.buf.format({ async = true })
 		end,
-		"Code Format"
+		"Format"
 	)
 
 	-- Search.
 	local ok_telescope, tbuiltin = pcall(require, "telescope.builtin")
 	if ok_telescope then
-		map("n", "<leader>sd", tbuiltin.lsp_definitions, "Search Definitions")
-		map("n", "<leader>sr", tbuiltin.lsp_references, "Search References")
-		map("n", "<leader>si", tbuiltin.lsp_implementations, "Search Implementations")
-		map("n", "<leader>sS", tbuiltin.lsp_document_symbols, "Search Buffer Symbols")
-		map(
-			"n",
-			"<leader>ss",
-			tbuiltin.lsp_dynamic_workspace_symbols,
-			"Search Workspace Symbols"
-		)
+		map("n", "<leader>el", function()
+			tbuiltin.diagnostics({ bufnr = 0 })
+		end, "Buffer diagnostics")
+		map("n", "<leader>eL", tbuiltin.diagnostics, "Workspace diagnostics")
+		map("n", "<leader>nd", tbuiltin.lsp_definitions, "Definitions")
+		map("n", "<leader>nr", tbuiltin.lsp_references, "References")
+		map("n", "<leader>ni", tbuiltin.lsp_implementations, "Implementations")
+		map("n", "<leader>nc", tbuiltin.lsp_incoming_calls, "Incoming calls")
+		map("n", "<leader>nC", tbuiltin.lsp_outgoing_calls, "Outgoing calls")
+		local symbol_pickers = require("lsp_symbol_pickers")
+		map("n", "<leader>ss", symbol_pickers.document_symbols, "File symbols")
+		map("n", "<leader>sS", function()
+			symbol_pickers.project_symbols()
+		end, "Project symbols")
+		map("n", "<leader>sc", function()
+			symbol_pickers.project_symbols({ "Class", "Struct" })
+		end, "Project classes and structs")
 	end
 end
 
-local function configure_lua(capabilities)
+-- Capabilities are injected by blink.cmp via vim.lsp.config("*"); servers listed in mason-lspconfig's
+-- ensure_installed are enabled by it automatically.
+local function configure_lua()
 	vim.lsp.config("lua_ls", {
-		capabilities = capabilities,
-		cmd = (vim.fn.has("unix") == 1 or vim.fn.has("linux") == 1) and { "lua-language-server" } or nil,
 		settings = {
 			Lua = {
 				telemetry = {
@@ -93,26 +74,6 @@ local function configure_lua(capabilities)
 				},
 			},
 		},
-	})
-	vim.lsp.enable("lua_ls")
-end
-
-local function configure_cpp(capabilities)
-	vim.lsp.config("clangd", {
-		capabilities = capabilities,
-		cmd = {
-			"D:/apps/vs2022/VC/Tools/Llvm/x64/bin/clangd.exe",
-			"--background-index",
-			"-j=30",
-			"--pch-storage=memory",
-			"--header-insertion=iwyu",
-		}
-	})
-end
-
-local function configure_csharp(capabilities)
-	vim.lsp.config("roslyn", {
-		capabilities = capabilities,
 	})
 end
 
@@ -130,15 +91,14 @@ return {
 				callback = on_lsp_attach
 			})
 
-			local capabilities = vim.lsp.protocol.make_client_capabilities()
-			local ok_blink, blink = pcall(require, "blink.cmp")
-			if ok_blink and blink.get_lsp_capabilities then
-				capabilities = blink.get_lsp_capabilities(capabilities)
-			end
+			vim.diagnostic.config({
+				virtual_text = { source = true },
+				signs = true,
+				underline = true,
+				update_in_insert = false,
+			})
 
-			configure_lua(capabilities)
-			configure_cpp(capabilities)
-			configure_csharp(capabilities)
+			configure_lua()
 		end,
 	},
 }

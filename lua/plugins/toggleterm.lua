@@ -3,12 +3,9 @@ return {
         "akinsho/toggleterm.nvim",
         version = "*",
         opts = {
-            open_mapping = [[<leader>`]],
             size = 30,
             close_on_exit = false,
             start_in_insert = true,
-            insert_mappings = true,
-            terminal_mappings = true,
             direction = "float", -- 'vertical' | 'horizontal' | 'tab' | 'float'
             auto_scroll = true,
             float_opts = {
@@ -24,16 +21,16 @@ return {
             on_open = function(term)
                 vim.keymap.set("t", "<Esc><Esc>", "<cmd>ToggleTerm<CR>", {
                     buffer = term.bufnr,
-                    noremap = true,
-                    silent = true
+                    silent = true,
+                    desc = "Hide terminal",
                 })
             end
         },
         keys = {
-            { "<leader>`",  "<cmd>ToggleTerm<CR>",              desc = "Toggle Terminal" },
-            { "<leader>tt", "<cmd>1ToggleTerm name=Common<CR>", desc = "Toggle Terminal [Common]" },
-            { "<leader>tb", "<cmd>10ToggleTerm name=Build<CR>", desc = "Toggle Terminal [Build]" },
-            { "<leader>tr", "<cmd>11ToggleTerm name=Run<CR>",   desc = "Toggle Terminal [Run]" }
+            { "<leader>`",  "<cmd>ToggleTerm<CR>",              desc = "Toggle terminal" },
+            { "<leader>tt", "<cmd>1ToggleTerm name=Common<CR>", desc = "Common terminal" },
+            { "<leader>tb", "<cmd>10ToggleTerm name=Build<CR>", desc = "Build terminal" },
+            { "<leader>tr", "<cmd>11ToggleTerm name=Run<CR>",   desc = "Run terminal" }
         }
     }
 }

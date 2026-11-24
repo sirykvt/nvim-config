@@ -29,9 +29,9 @@ local function configure_runners()
                 close_on_exit = false,
                 start_in_insert = true,
                 on_open = function(term)
-                    local opts = { buffer = term.bufnr, noremap = true, silent = true };
-                    vim.keymap.set("n", "<leader>`", "<cmd>close<CR>", opts)
-                    vim.keymap.set("n", "<Esc><Esc>", "<cmd>close<CR>", opts)
+                    local map_opts = { buffer = term.bufnr, silent = true }
+                    vim.keymap.set("n", "<leader>`", "<cmd>close<CR>", vim.tbl_extend("force", map_opts, { desc = "Hide task terminal" }))
+                    vim.keymap.set("n", "<Esc><Esc>", "<cmd>close<CR>", vim.tbl_extend("force", map_opts, { desc = "Hide task terminal" }))
 
                     vim.schedule(function()
                         vim.cmd("startinsert")
@@ -46,7 +46,67 @@ local function configure_runners()
         build = run_in_toggleterm("Build", 10),
         run = run_in_toggleterm("Run", 11)
     })
-    vim.g.asynctasks_term_pos = "toggleterm"
+    -- Tasks with output=terminal but no pos= go to the Run terminal; asyncrun's own toggleterm
+    -- runner supports a single terminal and fails on the second run.
+    vim.g.asynctasks_term_pos = "run"
+end
+
+local TASKS_TEMPLATE = [[
+# Project tasks for asynctasks.vim: https://github.com/skywind3000/asynctasks.vim
+# <leader>st picks a task; <leader>pb / <leader>pr run the tasks named "build" / "run".
+# Lines starting with '#' or ';' are comments.
+#
+# Task fields:
+#   [name]               Task name. [name:profile] defines a variant of the same task;
+#                        switch with :AsyncTaskProfile <profile> (default profile: debug).
+#   command=...          Shell command to run (required).
+#   command:c,cpp=...    Command used only for the listed filetypes.
+#   command/win32=...    Command used only on win32 or linux (macOS counts as linux).
+#   cwd=<root>           Working directory; <root> is the project root, same as $(VIM_ROOT).
+#   output=terminal      terminal: run in a terminal; quickfix (default): collect output into
+#                        the quickfix list and parse errors with errorformat.
+#   pos=build            Terminal for output=terminal: build / run open the Build / Run
+#                        toggleterm windows (<leader>tb / <leader>tr).
+#   save=2               Save before running: 1 = current file, 2 = all modified buffers.
+#   errorformat=...      Error pattern for output=quickfix, see :help errorformat.
+#   silent=1             Do not open the quickfix window.
+#
+# Macros expanded in command and cwd (also exported as environment variables):
+#   $(VIM_ROOT)      project root               $(VIM_CWD)        current directory
+#   $(VIM_FILEPATH)  current file, full path    $(VIM_FILEDIR)    directory of the current file
+#   $(VIM_FILENAME)  current file name          $(VIM_FILENOEXT)  file name without extension
+#   $(VIM_PRONAME)   project directory name     $(-name)          ask for a value on start
+#   :AsyncTaskMacro lists all macros with their current values.
+#
+# Example:
+#
+# [build]
+# command=cmake -S . -B build && cmake --build build
+# cwd=<root>
+# output=terminal
+# pos=build
+# save=2
+#
+# [run]
+# command=build/$(VIM_PRONAME)
+# cwd=<root>
+# output=terminal
+# pos=run
+]]
+
+-- Project .tasks visible from the current buffer, searched upward like asynctasks does.
+local function find_tasks_file()
+    local name = vim.api.nvim_buf_get_name(0)
+    local start = name ~= "" and vim.fs.dirname(name) or vim.fn.getcwd()
+    return vim.fs.find(".tasks", { upward = true, path = start, type = "file" })[1]
+end
+
+local function create_tasks_file()
+    local path = vim.fs.joinpath(vim.fn.getcwd(), ".tasks")
+    if vim.fn.filereadable(path) == 0 then
+        vim.fn.writefile(vim.split(TASKS_TEMPLATE, "\n", { trimempty = true }), path)
+    end
+    vim.cmd.edit(vim.fn.fnameescape(path))
 end
 
 local function configure_tasks_list()
@@ -56,51 +116,56 @@ local function configure_tasks_list()
     local actions = require("telescope.actions")
     local action_state = require("telescope.actions.state")
 
-    local function get_project_root()
-        -- Find the project root by looking for .tasks, .git, or .root
-        local root_file = vim.fs.find({ ".tasks", ".git", ".root" }, {
-            path = vim.fn.getcwd(),
-            upward = true,
-            type = "file",
-            stop = vim.env.HOME
-        })[1]
-        return root_file and vim.fs.dirname(root_file) or vim.fn.getcwd()
-    end
-
     local function telescope_asynctasks()
-        local root = get_project_root()
-        local task_file = root .. "/.tasks"
-
-        -- 1. Check if .tasks file exists
-        if vim.fn.filereadable(task_file) == 0 then
-            vim.notify("No .tasks file found in " .. root, vim.log.levels.WARN)
-            return
+        -- Uses asynctasks' own lookup: project .tasks files up the tree plus global tasks.ini.
+        local tasks = vim.fn["asynctasks#list"]("")
+        local entries = {}
+        for _, task in ipairs(type(tasks) == "table" and tasks or {}) do
+            table.insert(entries, {
+                value = task.name,
+                display = string.format("%-20s %s", task.name, task.command),
+                ordinal = task.name,
+                run = function()
+                    vim.cmd("AsyncTask " .. task.name)
+                end,
+            })
         end
 
-        -- 2. Parse the file for task names like [build] or [run]
-        local tasks = {}
-        for line in io.lines(task_file) do
-            -- Match content inside brackets: [task_name]
-            local task_name = line:match("^%s*%[([^%]]+)%]%s*$")
-            if task_name then
-                table.insert(tasks, task_name)
-            end
+        local tasks_file = find_tasks_file()
+        if not tasks_file then
+            table.insert(entries, {
+                display = "+ Create .tasks in " .. vim.fn.fnamemodify(vim.fn.getcwd(), ":~"),
+                ordinal = "create .tasks",
+                run = create_tasks_file,
+            })
+        elseif vim.tbl_isempty(entries) then
+            table.insert(entries, {
+                display = "  Edit " .. vim.fn.fnamemodify(tasks_file, ":~:.") .. " (no tasks defined)",
+                ordinal = "edit .tasks",
+                run = function()
+                    vim.cmd.edit(vim.fn.fnameescape(tasks_file))
+                end,
+            })
         end
 
-        -- 3. Open Telescope Picker
-        pickers.new({}, {
+        pickers.new(require("telescope.themes").get_dropdown({
+            previewer = false,
+            layout_config = { width = 0.8, height = 0.5 },
+        }), {
             prompt_title = "AsyncTasks",
             finder = finders.new_table({
-                results = tasks,
+                results = entries,
+                entry_maker = function(entry)
+                    return entry
+                end,
             }),
             sorter = conf.generic_sorter({}),
-            attach_mappings = function(prompt_bufnr, map)
+            attach_mappings = function(prompt_bufnr)
                 actions.select_default:replace(function()
-                    actions.close(prompt_bufnr)
                     local selection = action_state.get_selected_entry()
+                    actions.close(prompt_bufnr)
                     if selection then
-                        -- 4. Spawn the task
-                        vim.cmd("AsyncTask " .. selection[1])
+                        selection.run()
                     end
                 end)
                 return true
@@ -109,7 +174,9 @@ local function configure_tasks_list()
     end
 
     -- Create the keymap
-    vim.keymap.set("n", "<leader>st", telescope_asynctasks, { desc = "Search Tasks" })
+    vim.keymap.set("n", "<leader>st", telescope_asynctasks, { desc = "Tasks" })
+    vim.keymap.set("n", "<leader>pb", "<cmd>AsyncTask build<CR>", { desc = "Run 'build' task" })
+    vim.keymap.set("n", "<leader>pr", "<cmd>AsyncTask run<CR>", { desc = "Run 'run' task" })
 end
 
 return {

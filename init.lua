@@ -1,4 +1,5 @@
 require("config.options")
+vim.cmd.colorscheme("ayu-dark")
 require("config.keymaps")
 require("config.autocommands")
 require("config.lazy")

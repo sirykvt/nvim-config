@@ -7,7 +7,9 @@ return {
         },
         opts = {
             ensure_installed = {
-                "clangd"
+                "clangd",
+                "lua_ls",
+                "neocmake",
             }
         }
     }
