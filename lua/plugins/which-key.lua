@@ -13,6 +13,7 @@ return {
 				{ "<leader>n", group = "LSP navigation" },
 				{ "<leader>t", group = "Tasks" },
 				{ "<leader>y", group = "Copy path" },
+				{ "<leader>x", group = "System" },
 				{ "<leader>S", group = "Sessions" },
 			},
 		},

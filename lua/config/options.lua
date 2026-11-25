@@ -19,7 +19,8 @@ vim.o.updatetime = 250
 vim.o.timeoutlen = 300
 vim.o.splitright = true
 vim.o.splitbelow = true
-vim.opt.listchars = { tab = "» ", trail = "·", nbsp = "␣" }
+-- Shown with <leader>xs: every space, with trailing spaces marked differently.
+vim.opt.listchars = { space = "·", trail = "•", tab = "» ", nbsp = "␣" }
 vim.o.inccommand = "split"
 vim.o.cursorline = true
 vim.o.scrolloff = 10
@@ -27,8 +28,6 @@ vim.opt.expandtab = true
 vim.opt.shiftwidth = 4
 vim.opt.tabstop = 4
 vim.opt.softtabstop = 4
--- Recommended by auto-session so filetype/highlighting is restored with the session.
-vim.opt.sessionoptions:append("localoptions")
 
 vim.schedule(function()
 	vim.o.clipboard = "unnamedplus"
