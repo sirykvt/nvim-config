@@ -75,7 +75,13 @@ return {
 				pickers = {
 					-- Current buffer stays listed (no "No buffers found" with a single file), but the
 					-- previous buffer is preselected, so <leader><leader><CR> switches back to it.
-					buffers = { sort_mru = true, sort_lastused = true },
+					buffers = {
+						sort_mru = true,
+						sort_lastused = true,
+						mappings = {
+							n = { ["dd"] = require("telescope.actions").delete_buffer },
+						},
+					},
 					current_buffer_fuzzy_find = { skip_empty_lines = true },
 					keymaps = list,
 					builtin = vim.tbl_extend("force", list, { include_extensions = true }),
