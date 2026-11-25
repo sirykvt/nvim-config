@@ -73,7 +73,9 @@ return {
 					},
 				},
 				pickers = {
-					buffers = { sort_mru = true, ignore_current_buffer = true },
+					-- Current buffer stays listed (no "No buffers found" with a single file), but the
+					-- previous buffer is preselected, so <leader><leader><CR> switches back to it.
+					buffers = { sort_mru = true, sort_lastused = true },
 					current_buffer_fuzzy_find = { skip_empty_lines = true },
 					keymaps = list,
 					builtin = vim.tbl_extend("force", list, { include_extensions = true }),

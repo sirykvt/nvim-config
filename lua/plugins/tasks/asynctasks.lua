@@ -1,59 +1,45 @@
-local function configure_runners()
-    local function run_in_toggleterm(name, id)
-        return function(opts)
-            local Terminal = require("toggleterm.terminal").Terminal
+-- Tasks share the single <leader>` terminal: a task restarts it with the task command,
+-- then leaves an interactive shell behind.
+local TERMINAL_ID = 1
 
-            local existing_term = Terminal:new({ id = id })
-            if existing_term.job_id then
-                existing_term:shutdown()
-            end
-
-            local shell = vim.o.shell
-            local cmd = opts.cmd .. "; exec " .. shell
-
-            if vim.fn.has("win32") == 1 then
-                if shell:lower():match("cmd") then
-                    cmd = opts.cmd .. " & " .. shell
-                elseif shell:lower():match("powershell") or shell:lower():match("pwsh") then
-                    cmd = opts.cmd .. "; " .. shell
-                end
-            end
-
-            local task_term = Terminal:new({
-                cmd = cmd,
-                dir = opts.cwd,
-                id = id,
-                display_name = name,
-                direction = "float",
-                auto_scroll = true,
-                close_on_exit = false,
-                start_in_insert = true,
-                on_open = function(term)
-                    local map_opts = { buffer = term.bufnr, silent = true }
-                    vim.keymap.set("n", "<leader>`", "<cmd>close<CR>", vim.tbl_extend("force", map_opts, { desc = "Hide task terminal" }))
-                    vim.keymap.set("n", "<Esc><Esc>", "<cmd>close<CR>", vim.tbl_extend("force", map_opts, { desc = "Hide task terminal" }))
-
-                    vim.schedule(function()
-                        vim.cmd("startinsert")
-                    end)
-                end,
-            })
-            task_term:toggle()
+local function with_shell(cmd)
+    local shell = vim.o.shell
+    if vim.fn.has("win32") == 1 then
+        if shell:lower():match("cmd") then
+            return cmd .. " & " .. shell
+        end
+        if shell:lower():match("powershell") or shell:lower():match("pwsh") then
+            return cmd .. "; " .. shell
         end
     end
+    return cmd .. "; exec " .. shell
+end
 
+local function run_in_terminal(opts)
+    local terminal = require("toggleterm.terminal")
+    local existing = terminal.get(TERMINAL_ID, true)
+    if existing then
+        existing:shutdown()
+    end
+    -- Direction, size and keymaps come from the toggleterm config.
+    terminal.Terminal:new({ id = TERMINAL_ID, cmd = with_shell(opts.cmd), dir = opts.cwd }):open()
+end
+
+local function configure_runners()
     vim.g.asyncrun_runner = vim.tbl_deep_extend("force", vim.g.asyncrun_runner or {}, {
-        build = run_in_toggleterm("Build", 10),
-        run = run_in_toggleterm("Run", 11)
+        terminal_task = run_in_terminal,
+        -- Older .tasks files use pos=build / pos=run.
+        build = run_in_terminal,
+        run = run_in_terminal,
     })
-    -- Tasks with output=terminal but no pos= go to the Run terminal; asyncrun's own toggleterm
-    -- runner supports a single terminal and fails on the second run.
-    vim.g.asynctasks_term_pos = "run"
+    -- Default for output=terminal tasks without pos=; asyncrun's own toggleterm runner
+    -- fails when its terminal already exists.
+    vim.g.asynctasks_term_pos = "terminal_task"
 end
 
 local TASKS_TEMPLATE = [[
 # Project tasks for asynctasks.vim: https://github.com/skywind3000/asynctasks.vim
-# <leader>st picks a task; <leader>pb / <leader>pr run the tasks named "build" / "run".
+# <leader>tl picks a task, <leader>tt repeats the last one.
 # Lines starting with '#' or ';' are comments.
 #
 # Task fields:
@@ -63,10 +49,8 @@ local TASKS_TEMPLATE = [[
 #   command:c,cpp=...    Command used only for the listed filetypes.
 #   command/win32=...    Command used only on win32 or linux (macOS counts as linux).
 #   cwd=<root>           Working directory; <root> is the project root, same as $(VIM_ROOT).
-#   output=terminal      terminal: run in a terminal; quickfix (default): collect output into
-#                        the quickfix list and parse errors with errorformat.
-#   pos=build            Terminal for output=terminal: build / run open the Build / Run
-#                        toggleterm windows (<leader>tb / <leader>tr).
+#   output=terminal      terminal: run in the <leader>` terminal (restarts it); quickfix (default):
+#                        collect output into the quickfix list and parse errors with errorformat.
 #   save=2               Save before running: 1 = current file, 2 = all modified buffers.
 #   errorformat=...      Error pattern for output=quickfix, see :help errorformat.
 #   silent=1             Do not open the quickfix window.
@@ -84,14 +68,12 @@ local TASKS_TEMPLATE = [[
 # command=cmake -S . -B build && cmake --build build
 # cwd=<root>
 # output=terminal
-# pos=build
 # save=2
 #
 # [run]
 # command=build/$(VIM_PRONAME)
 # cwd=<root>
 # output=terminal
-# pos=run
 ]]
 
 -- Project .tasks visible from the current buffer, searched upward like asynctasks does.
@@ -174,9 +156,8 @@ local function configure_tasks_list()
     end
 
     -- Create the keymap
-    vim.keymap.set("n", "<leader>st", telescope_asynctasks, { desc = "Tasks" })
-    vim.keymap.set("n", "<leader>pb", "<cmd>AsyncTask build<CR>", { desc = "Run 'build' task" })
-    vim.keymap.set("n", "<leader>pr", "<cmd>AsyncTask run<CR>", { desc = "Run 'run' task" })
+    vim.keymap.set("n", "<leader>tl", telescope_asynctasks, { desc = "Task list" })
+    vim.keymap.set("n", "<leader>tt", "<cmd>AsyncTaskLast<CR>", { desc = "Repeat last task" })
 end
 
 return {

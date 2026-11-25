@@ -8,15 +8,8 @@ local function on_lsp_attach(args)
 		})
 	end
 
-	-- Misc.
-	map("n", "<leader>xr", "<cmd>LspRestart<CR>", "Restart LSP")
-	map("n", "<leader>xl", "<cmd>LspInfo<CR>", "LSP info")
-
 	-- Diagnostics.
 	map("n", "<leader>ee", vim.diagnostic.open_float, "Line diagnostics")
-	map("n", "<leader>xh", function()
-		vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = args.buf }), { bufnr = args.buf })
-	end, "Toggle inlay hints")
 
 	-- Go to.
 	map("n", "gd", vim.lsp.buf.definition, "Go to definition")
