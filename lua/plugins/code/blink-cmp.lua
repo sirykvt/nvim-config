@@ -1,3 +1,13 @@
+-- clangd lists `<` as a trigger character for `#include <`, but outside includes it answers with an
+-- empty, complete list. blink caches that answer for the rest of the word, so `std::vector<st`
+-- (typed, or after accepting `vector`) showed nothing. Header names still complete from the first
+-- letter after `<`.
+local function trigger_characters_without_angle(self)
+	return vim.tbl_filter(function(char)
+		return char ~= "<"
+	end, self:get_trigger_characters())
+end
+
 return {
 	{
 		"saghen/blink.cmp",
@@ -40,6 +50,7 @@ return {
 			sources = {
 				default = { "lsp", "path", "snippets", "lazydev" },
 				providers = {
+					lsp = { override = { get_trigger_characters = trigger_characters_without_angle } },
 					lazydev = { module = "lazydev.integrations.blink", score_offset = 100 },
 				},
 			},
