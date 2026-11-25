@@ -70,6 +70,15 @@ local function configure_lua()
 	})
 end
 
+local function configure_cpp()
+	vim.lsp.config("clangd", {
+		-- Insert only `name()` for function completions: argument placeholders are snippets that
+		-- <Tab> (blink super-tab) would jump back into after leaving them unfilled. Argument types
+		-- are still shown by signature help.
+		cmd = { "clangd", "--function-arg-placeholders=0" },
+	})
+end
+
 return {
 	{
 		"neovim/nvim-lspconfig",
@@ -92,6 +101,7 @@ return {
 			})
 
 			configure_lua()
+			configure_cpp()
 		end,
 	},
 }
